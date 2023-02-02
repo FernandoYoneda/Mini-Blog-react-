@@ -3,28 +3,65 @@ import styles from './CreatePost.module.css'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthValue } from '../../context/AuthContext'
+import { useInsertDocument } from '../../hooks/useInsertDocument'
 
 const CreatePost = () => {
   const [title, setTitle] = useState('')
-  const [imgage, setImage] = useState('')
+  const [image, setImage] = useState('')
   const [body, setBody] = useState('')
   const [tags, setTags] = useState([])
   const [formError, setFormError] = useState('')
 
+  const { insertDocument, response } = useInsertDocument('posts')
+
+  const navigate = useNavigate()
+
+  const { user } = useAuthValue()
+
   const handleSubmit = (e) => {
-    e.proventDefault()
+    e.preventDefault()
+    setFormError('')
+
+    //validar url da imagem
+    try {
+      new URL(image)
+    } catch (error) {
+      setFormError('A imagem precisa ser uma URL')
+    }
+
+    //criar o array de tags
+    const tagsArray = tags.split(',').map((tag) => tag.trim().toLowerCase())
+
+    //checar todos os valores
+    if (!title || !image || !tags || !body) {
+      setFormError('Por favor preencha todos os campos!')
+    }
+
+    if (formError) return
+
+    insertDocument({
+      title,
+      image,
+      body,
+      tagsArray,
+      uid: user.uid,
+      createBy: user.displayName,
+    })
+
+    //redirecionar para página de Home
+    navigate('/')
   }
 
   return (
-    <div>
+    <div className={styles.create_post}>
       <h2>Criar post</h2>
       <p>Escreva osbre o que quiser e compartilhe o seu conhecimento</p>
-      <form>
+      <form onSubmit={handleSubmit}>
         <label>
           <span>Título:</span>
           <input
             type="text"
-            name="title"
+            name="text"
             required
             placeholder="Pense num bom título..."
             onChange={(e) => setTitle(e.target.value)}
@@ -39,7 +76,7 @@ const CreatePost = () => {
             required
             placeholder="insira uma imagem que represente seu post..."
             onChange={(e) => setImage(e.target.value)}
-            value={Image}
+            value={image}
           />
         </label>
         <label>
@@ -63,6 +100,15 @@ const CreatePost = () => {
             value={tags}
           />
         </label>
+
+        {!response.loading && <button className="btn">Criar post!</button>}
+        {response.loading && (
+          <button className="btn" disabled>
+            Aguarde...
+          </button>
+        )}
+        {response.error && <p className="error">{response.error}</p>}
+        {formError && <p className="error">{formError}</p>}
       </form>
     </div>
   )
