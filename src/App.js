@@ -15,6 +15,7 @@ import About from './pages/About/About'
 import Login from './Login/Login'
 import Register from './register/Register'
 import Search from './pages/Search/Search'
+import Post from './pages/Post/Post'
 
 // - Componentes
 import NavBar from './component/NavBar'
@@ -55,6 +56,7 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
               <Route path="/search" element={<Search />} />
+              <Route path="/posts/:id" element={<Post />} />
               <Route
                 path="/login"
                 element={!user ? <Login /> : <Navigate to="/" />}
